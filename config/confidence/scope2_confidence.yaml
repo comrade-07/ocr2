@@ -1,0 +1,69 @@
+# Editable confidence and review-rule settings for Scope 2 invoices.
+# These values feed the Silver review/tagging layer.
+
+thresholds:
+  document_confidence: 0.60
+  critical: 0.80
+  optional: 0.60
+  noncritical: 0.30
+  blank_high_confidence: 0.90
+
+critical_fields:
+  - account_number
+  - consumption_start_date_1
+  - consumption_end_date_1
+  - quantity_1
+  - quantity_2
+  - quantity_3
+  - quantity_4
+  - quantity_5
+  - quantity_6
+  - quantity_unit_1
+
+optional_fields:
+  - legal_entity
+  - unit_name
+  - consumption_start_date_2
+  - consumption_end_date_2
+  - solar_export
+  - solar_banking_charge
+  - solar_total_generation
+
+
+noncritical_fields:
+  - invoice_date
+  - sample_text
+  - quantity_unit_2
+  - supplier
+  - total_amount
+
+review_statuses:
+  auto_approved: AUTO_APPROVED
+  auto_resolved_with_warning: AUTO_RESOLVED_WITH_WARNING
+  optional_field_warning: OPTIONAL_FIELD_WARNING
+  review_required: REVIEW_REQUIRED
+  blocked: BLOCKED
+
+field_statuses:
+  pass: PASS
+  review: REVIEW
+  warning: WARNING
+  blocked: BLOCKED
+  auto_resolved: AUTO_RESOLVED
+
+field_tags:
+  pass: PASS
+  low_confidence: LOW_CONFIDENCE
+  missing_required: MISSING_REQUIRED
+  missing_optional: MISSING_OPTIONAL
+  blank_high_confidence: BLANK_HIGH_CONFIDENCE
+  invalid_format: INVALID_FORMAT
+  failed_business_rule: FAILED_BUSINESS_RULE
+  unmapped_value: UNMAPPED_VALUE
+  auto_resolved_by_mapping: AUTO_RESOLVED_BY_MAPPING
+
+# Mapping checks will be added later. Keep this section so the review module can
+# grow without changing the top-level YAML shape.
+mapping_checks:
+  enabled: false
+  fields: []

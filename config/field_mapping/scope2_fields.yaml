@@ -1,0 +1,69 @@
+# Maps standard app field names to possible Azure Document Intelligence source field names.
+# The app checks sources from top to bottom and uses the first field found.
+
+fields:
+  legal_entity:
+    sources: ["Legal Entity"]
+
+  unit_name:
+    sources: ["Unit Name"]
+
+  supplier:
+    sources: ["Supplier"]
+
+  invoice_date:
+    sources: ["Invoice Date"]
+
+  account_number:
+    sources: ["Account Number"]
+
+  total_amount:
+    sources: ["Total Amount"]
+
+  consumption_start_date_1:
+    sources: ["Consumption Start Date"]
+
+  consumption_end_date_1:
+    sources: ["Consumption End Date"]
+
+  consumption_start_date_2:
+    sources: ["Consumption Start Date 2"]
+
+  consumption_end_date_2:
+    sources: ["Consumption End Date 2"]
+
+  quantity_1:
+    sources: ["Quantity 1"]
+
+  quantity_2:
+    sources: ["Quantity 2"]
+
+  quantity_3:
+    sources: ["Quantity 3"]
+
+  quantity_4:
+    sources: ["Quantity 4"]
+
+  quantity_5:
+    sources: ["Quantity 5"]
+
+  quantity_6:
+    sources: ["Quantity 6"]
+
+  quantity_unit_1:
+    sources: ["Quantity Unit 1"]
+
+  quantity_unit_2:
+    sources: ["Quantity Unit 2"]
+
+  sample_text:
+    sources: ["Sample Text"]
+
+  solar_export:
+    sources: ["Solar - Export"]
+
+  solar_banking_charge:
+    sources: ["Solar - Banking Charge"]
+
+  solar_total_generation:
+    sources: ["Solar - Total Generation"]

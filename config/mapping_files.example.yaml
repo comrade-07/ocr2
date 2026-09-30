@@ -1,0 +1,32 @@
+# Copy this file to config/mapping_files.yaml and adjust paths per computer.
+# Relative paths are resolved from the project root.
+
+mapping_files:
+  mapping:
+    path: "mappings/mapping.xlsx"
+    sheet_name: "mapping"
+    ocr_key_fields: ["account_number"]
+    workbook_key_columns: ["account_number"]
+
+  energy_source_allocation:
+    # Optional workbook columns account_number and activity_group distinguish
+    # energy accounts sharing a facility/supplier/month. Unqualified rows are
+    # legacy electricity mappings only. Fractions must be supplied for all
+    # three sources and sum to 1; missing/invalid allocations are flagged and
+    # excluded from final templates for every energy KPI.
+    path: "mappings/energy_source_allocation.xlsx"
+    sheet_name: "energy_source_allocation"
+    delimiter: "_"
+    ocr_key_fields: ["unit_name", "supplier", "start_date"]
+    workbook_key_columns: ["unit_name", "supplier_name", "start_date"]
+    date_key_fields: ["start_date"]
+
+  contracts:
+    # Use the same account_number/activity_group qualifiers when needed.
+    # A unique account match takes precedence over an activity-only mapping.
+    path: "mappings/contracts.xlsx"
+    sheet_name: "contracts"
+    delimiter: "_"
+    ocr_key_fields: ["unit_name", "supplier", "contract_start_date"]
+    workbook_key_columns: ["unit_name", "supplier_name", "contract_start_date"]
+    date_key_fields: ["contract_start_date"]

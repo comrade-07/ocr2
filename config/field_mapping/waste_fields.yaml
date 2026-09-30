@@ -1,0 +1,122 @@
+# Maps Waste OCR field names to standard bronze/review fields.
+# Waste Details Table is expanded to one bronze row per table item.
+
+fields:
+  legal_entity:
+    sources: ["Legal Entity"]
+
+  unit_name:
+    sources: ["Unit Name"]
+
+  invoice_date:
+    sources: ["Invoice Date"]
+
+  division:
+    sources: ["Division"]
+
+  origin_nima_code:
+    sources: ["Origin NIMA Code"]
+
+  disposal_date:
+    sources: ["Disposal Date"]
+
+  waste_transporter_company:
+    sources: ["Waste Transporter Company"]
+
+  waste_disposal_company:
+    sources: ["Waste Disposal Company"]
+
+  supplier:
+    sources: ["Waste Disposal Company", "Waste Transporter Company"]
+
+  waste_details:
+    sources: ["Waste Details"]
+
+  waste_type:
+    sources: ["Waste Details", "Waste Class"]
+
+  waste_code:
+    sources: ["Waste Code"]
+
+  waste_code_type:
+    sources: ["Waste Code Type"]
+
+  waste_class:
+    sources: ["Waste Class"]
+
+  hazard_code:
+    sources: ["Hazard Code"]
+
+  treatment_method:
+    sources: ["Treatment Method"]
+
+  disposal_method:
+    sources: ["Treatment Method"]
+
+  truck_scale_start:
+    sources: ["Truck Scale Start"]
+
+  truck_scale_end:
+    sources: ["Truck Scale End"]
+
+  truck_scale_unit:
+    sources: ["Truck Scale Unit"]
+
+  invoice_weight:
+    sources: ["Invoice Weight"]
+
+  invoice_weight_unit:
+    sources: ["Invoice Weight Unit"]
+
+  quantity_1:
+    sources: ["Invoice Weight"]
+
+  quantity_unit_1:
+    sources: ["Invoice Weight Unit"]
+
+  total_amount:
+    sources: ["Total Amount"]
+
+  service_start_date:
+    sources: ["Disposal Date"]
+
+  service_end_date:
+    sources: ["Disposal Date"]
+
+tables:
+  waste_details_table:
+    source: "Waste Details Table"
+    fields:
+      waste_line_description:
+        sources: ["Description"]
+
+      waste_line_load_date:
+        sources: ["Load Date"]
+
+      waste_line_unit:
+        sources: ["Unit"]
+
+      waste_line_quantity:
+        sources: ["Quantity"]
+
+      waste_line_price:
+        sources: ["Price"]
+
+      waste_line_amount:
+        sources: ["Amount"]
+
+duplicate_key:
+  fields:
+    - line_id
+    - legal_entity
+    - unit_name
+    - invoice_date
+    - waste_disposal_company
+    - waste_code
+    - disposal_date
+    - invoice_weight
+    - waste_line_description
+    - waste_line_load_date
+    - waste_line_quantity
+    - waste_line_unit
+    - waste_line_amount

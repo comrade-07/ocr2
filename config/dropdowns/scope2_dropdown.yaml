@@ -1,0 +1,51 @@
+# Editable dropdown values for Scope 2 manual data entry.
+# Energy unit options below mirror src/transform/unit_conversion.py;
+# the app uses those shared rules so every offered unit has a conversion.
+# Other dropdown values can be edited here without changing the app code.
+
+manual_entry:
+  date_output_format: "%Y-%m-%d"
+  date_display_format: "YYYY-MM-DD"
+
+fields:
+  data_quality:
+    label: Data quality
+    options:
+      - Actual
+      - Estimated
+  division:
+    label: Division
+    options: []
+  legal_entity_name:
+    label: Legal Entity Name
+    options: []
+  unit:
+    label: Unit
+    options: []
+  consumption_start_date:
+    label: Consumption start date
+    options: []
+  consumption_end_date:
+    label: Consumption end date
+    options: []
+  transaction_date:
+    label: Transaction Date
+    options: []
+  amount_of_energy_consumed:
+    label: Amount of energy consumed
+    options: []
+  energy_unit:
+    label: Energy Unit
+    options:
+      - kWh
+      - MWh
+      - ton
+      - RTH
+validation:
+  entity_list:
+    source: C:/Users/JZS/OneDrive - Stolt-Nielsen Limited/+GRP-SNL GSSC ESG Reporting - Documents/ESG-OCR/0_reference/master_entity_list.csv
+    columns:
+      active: active
+      division: division
+      legal_entity_name: legal_entity_name
+      unit: unit

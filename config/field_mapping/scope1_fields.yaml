@@ -1,0 +1,41 @@
+# Maps standard app field names to possible Azure Document Intelligence source field names.
+
+fields:
+  legal_entity:
+    sources: ["Legal Entity"]
+
+  unit_name:
+    sources: ["Unit Name"]
+
+  supplier:
+    sources: ["Supplier", "Vendor"]
+
+  invoice_date:
+    sources: ["Invoice Date", "Date"]
+
+  account_number:
+    sources: ["Account Number"]
+
+  fuel_type:
+    sources: ["Fuel Type", "Product", "Material"]
+
+  total_amount:
+    sources: ["Total Amount", "Amount"]
+
+  consumption_start_date_1:
+    sources: ["Consumption Start Date", "Service Start Date", "Period Start Date"]
+
+  consumption_end_date_1:
+    sources: ["Consumption End Date", "Service End Date", "Period End Date"]
+
+  quantity_1:
+    sources: ["Quantity 1", "Quantity", "Volume"]
+
+  quantity_unit_1:
+    sources: ["Quantity Unit 1", "Unit"]
+
+  emission_factor:
+    sources: ["Emission Factor"]
+
+  emissions_co2e:
+    sources: ["Emissions CO2e", "CO2e", "GHG Emissions"]

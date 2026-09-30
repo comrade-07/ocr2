@@ -1,0 +1,76 @@
+# Editable confidence and review-rule settings for Waste records.
+
+thresholds:
+  document_confidence: 0.60
+  critical: 0.80
+  optional: 0.60
+  noncritical: 0.30
+  blank_high_confidence: 0.90
+
+critical_fields:
+  - legal_entity
+  - unit_name
+  - invoice_date
+  - waste_disposal_company
+  - waste_code
+
+optional_fields:
+  - division
+  - origin_nima_code
+  - disposal_date
+  - waste_transporter_company
+  - supplier
+  - waste_details
+  - waste_type
+  - waste_code_type
+  - waste_class
+  - hazard_code
+  - treatment_method
+  - disposal_method
+  - truck_scale_start
+  - truck_scale_end
+  - truck_scale_unit
+  - invoice_weight
+  - invoice_weight_unit
+  - quantity_1
+  - quantity_unit_1
+  - total_amount
+  - service_start_date
+  - service_end_date
+  - waste_line_description
+  - waste_line_load_date
+  - waste_line_unit
+  - waste_line_quantity
+  - waste_line_price
+  - waste_line_amount
+
+noncritical_fields: []
+
+review_statuses:
+  auto_approved: AUTO_APPROVED
+  auto_resolved_with_warning: AUTO_RESOLVED_WITH_WARNING
+  optional_field_warning: OPTIONAL_FIELD_WARNING
+  review_required: REVIEW_REQUIRED
+  blocked: BLOCKED
+
+field_statuses:
+  pass: PASS
+  review: REVIEW
+  warning: WARNING
+  blocked: BLOCKED
+  auto_resolved: AUTO_RESOLVED
+
+field_tags:
+  pass: PASS
+  low_confidence: LOW_CONFIDENCE
+  missing_required: MISSING_REQUIRED
+  missing_optional: MISSING_OPTIONAL
+  blank_high_confidence: BLANK_HIGH_CONFIDENCE
+  invalid_format: INVALID_FORMAT
+  failed_business_rule: FAILED_BUSINESS_RULE
+  unmapped_value: UNMAPPED_VALUE
+  auto_resolved_by_mapping: AUTO_RESOLVED_BY_MAPPING
+
+mapping_checks:
+  enabled: false
+  fields: []

@@ -1,0 +1,28 @@
+# Editable confidence and review-rule settings for Water records.
+
+thresholds:
+  critical: 0.80
+  optional: 0.60
+  noncritical: 0.30
+  blank_high_confidence: 0.90
+
+critical_fields:
+  - legal_entity
+  - unit_name
+  - supplier
+  - water_type
+  - consumption_start_date_1
+  - consumption_end_date_1
+  - quantity_1
+  - quantity_unit_1
+
+optional_fields:
+  - invoice_date
+  - account_number
+  - total_amount
+
+noncritical_fields: []
+
+mapping_checks:
+  enabled: false
+  fields: []

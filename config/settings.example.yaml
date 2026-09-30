@@ -1,0 +1,42 @@
+manual_upload_evidence:
+  # Direct HTTPS folder URLs corresponding to EACH CATEGORY'S actual upload folder.
+  # Generic manual_data_entry_uploads adds /scope2, /water, etc. locally;
+  # include that subfolder in the corresponding URL below as well.
+  # Category-specific upload paths use their exact folder (no appended category).
+  # Do not use Copy link sharing URLs or Forms/AllItems.aspx browser URLs.
+  # Example: https://tenant.sharepoint.com/sites/ESG/Shared%20Documents/Evidence/scope2
+  sharepoint_folder_urls:
+    scope1: ""
+    scope2: ""
+    water: ""
+    waste: ""
+
+app:
+  name: invoice_platform
+  environment: dev
+
+paths:
+  # Copy this file to config/settings.yaml and adjust for each computer.
+  # Home/testing example:
+  raw_json_scope1: "data/source/scope1"
+  raw_json_scope2: "data/source"
+  raw_json_water: "data/source/water"
+  raw_json_waste: "data/source/waste"
+  # Work example:
+  # raw_json_scope2: "C:/Users/My PC/SharePoint/raw_json"
+
+  # Output folders. Change silver_excel_output to move the finished Excel workbooks.
+  bronze_output: "data/bronze"
+  silver_excel_output: "data/silver"
+  review_checkpoint_output: "data/output/checkpoints"
+  # Uploaded unsupported invoice files for manual data entry.
+  manual_data_entry_uploads: "data/manual_uploads"
+  category_checkpoint_dirs: true
+  gold_output: "data/gold"
+
+  # Waste uses dedicated folders. Scope 2 paths and naming remain unchanged.
+  bronze_output_waste: "data/bronze/waste"
+  silver_excel_output_waste: "data/silver/waste"
+  review_checkpoint_output_waste: "data/output/checkpoints/waste"
+  manual_data_entry_uploads_waste: "data/manual_uploads/waste"
+  gold_output_waste: "data/gold/waste"
