@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import UTC, date, datetime
+from src.core.blob_storage import DEFAULT_MANUAL_PREFIX, manual_blob_name, upload_manual_file
 import html
 import inspect
 import os
@@ -1419,26 +1420,43 @@ def manual_upload_dir(category_key: str) -> Path:
     return upload_dir / category_key
 
 
-def save_manual_upload(uploaded_file, category_key: str) -> Path:
-    upload_dir = manual_upload_dir(category_key)
-    upload_dir.mkdir(parents=True, exist_ok=True)
+def save_manual_upload(uploaded_file, category_key: str) -> Path | str:
     uploaded_at = datetime.now(UTC).replace(microsecond=0).strftime("%Y%m%dT%H%M%SZ")
     safe_name = safe_uploaded_filename(uploaded_file.name)
-    target = upload_dir / f"{uploaded_at}_{safe_name}"
-    evidence_settings = SETTINGS.get("manual_upload_evidence", {})
-    folder_urls = evidence_settings.get("sharepoint_folder_urls", {})
-    folder_url = folder_urls.get(category_key, "")
-    sharepoint_link = build_upload_evidence_url(target, upload_dir, folder_url)
-    target.write_bytes(uploaded_file.getbuffer())
+    stored_name = f"{uploaded_at}_{safe_name}"
+    blob_settings = SETTINGS.get("manual_upload_blob", {})
+
+    if blob_settings.get("enabled", False):
+        blob_name = manual_blob_name(
+            category_key, stored_name, blob_settings.get("prefix", DEFAULT_MANUAL_PREFIX)
+        )
+        evidence_link = upload_manual_file(
+            blob_name,
+            bytes(uploaded_file.getbuffer()),
+            link_mode=blob_settings.get("link_mode", "url"),
+            sas_years=int(blob_settings.get("sas_years", 10)),
+        )
+        stored_location: Path | str = blob_name
+    else:
+        # Original local + SharePoint behaviour
+        upload_dir = manual_upload_dir(category_key)
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        target = upload_dir / stored_name
+        folder_url = SETTINGS.get("manual_upload_evidence", {}).get(
+            "sharepoint_folder_urls", {}
+        ).get(category_key, "")
+        evidence_link = build_upload_evidence_url(target, upload_dir, folder_url)
+        target.write_bytes(uploaded_file.getbuffer())
+        stored_location = target
+
     append_manual_upload_queue_row(
         category_paths(category_key)["manual_data_entry_queue"],
         uploaded_file_name=uploaded_file.name,
-        stored_file_path=target,
+        stored_file_path=stored_location,
         uploaded_at=datetime.now(UTC).replace(microsecond=0).isoformat(),
-        sharepoint_link=sharepoint_link,
+        sharepoint_link=evidence_link,  # same column, so audit/report links keep working
     )
-    return target
-
+    return stored_location
 
 def safe_uploaded_filename(filename: str) -> str:
     path = Path(filename)
@@ -3439,7 +3457,7 @@ def show_manual_data_entry_source(row: pd.Series) -> None:
     if link:
         st.link_button("Open evidence file", link)
         if row.get("manual_entry_source", "") == MANUAL_ENTRY_SOURCE_UPLOAD:
-            st.caption("The evidence link becomes available after SharePoint sync completes.")
+            st.caption("Evidence is stored in Azure Blob Storage.")
     elif str(row.get("source_path", "")).strip():
         st.caption(f"Source path: {row.get('source_path', '')}")
 
