@@ -43,7 +43,8 @@ fields:
       - RTH
 validation:
   entity_list:
-    source: C:/Users/JZS/OneDrive - Stolt-Nielsen Limited/+GRP-SNL GSSC ESG Reporting - Documents/ESG-OCR/0_reference/master_entity_list.csv
+    blob_name: "dev/reference/master_entity_list.csv"
+    sharepoint_url: "https://stolt.sharepoint.com/:x:/r/sites/group-snl-gssc-esg-reporting/Shared%20Documents/ESG-OCR/0_reference/master_entity_list.csv?d=wa1f699f34384456aa95a8e53f69c9842&csf=1&web=1&e=G5Jy9N"
     columns:
       active: active
       division: division

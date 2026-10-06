@@ -1,6 +1,5 @@
 from pathlib import Path
 from datetime import UTC, date, datetime
-from src.core.blob_storage import DEFAULT_MANUAL_PREFIX, manual_blob_name, upload_manual_file
 import html
 import inspect
 import os
@@ -66,6 +65,12 @@ from src.review.manual_data_entry import (
     load_dropdown_config,
     load_entity_hierarchy,
     missing_manual_data_entry_fields,
+)
+from src.core.blob_storage import (
+    DEFAULT_MANUAL_PREFIX,
+    download_blob_bytes,
+    manual_blob_name,
+    upload_manual_file,
 )
 
 
@@ -890,19 +895,75 @@ def facility_key_from_row(row: pd.Series, columns: dict[str, str]) -> tuple[str,
     return tuple(normalize_facility_value(row.get(columns[column], "")) for column in FACILITY_KEY_COLUMNS)
 
 
-def facility_dropdown_source_path(category_key: str = "scope2") -> Path:
-    dropdown_config = load_dropdown_config(dropdown_config_path(ROOT_DIR / "config", category_key))
-    return entity_list_source_path(ROOT_DIR / "config", dropdown_config)
+def facility_dropdown_source_path(
+    category_key: str = "scope2",
+) -> Path:
+    dropdown_config = load_dropdown_config(
+        dropdown_config_path(
+            ROOT_DIR / "config",
+            category_key,
+        )
+    )
+
+    return entity_list_source_path(
+        ROOT_DIR / "config",
+        dropdown_config,
+    )
 
 
 def load_master_facilities() -> pd.DataFrame:
-    master_path = facility_dropdown_source_path()
-    master_stat = master_path.stat() if master_path.exists() else None
-
-    return _load_master_facilities_cached(
-        master_path=str(master_path),
-        modified_time=master_stat.st_mtime if master_stat else 0,
+    dropdown_config = load_dropdown_config(
+        dropdown_config_path(
+            ROOT_DIR / "config",
+            "scope2",
+        )
     )
+
+    hierarchy = load_entity_hierarchy(
+        ROOT_DIR / "config",
+        dropdown_config,
+    )
+
+    rows = []
+
+    for (
+        division,
+        legal_entities,
+    ) in hierarchy.items():
+        for (
+            legal_entity_name,
+            units,
+        ) in legal_entities.items():
+            for unit in units:
+                rows.append(
+                    {
+                        "division": division,
+                        "legal_entity_name": (
+                            legal_entity_name
+                        ),
+                        "unit": unit,
+                    }
+                )
+
+    if not rows:
+        return pd.DataFrame(
+            columns=FACILITY_KEY_COLUMNS
+        )
+
+    result = pd.DataFrame(rows)
+
+    result = (
+        result[
+            FACILITY_KEY_COLUMNS
+        ]
+        .drop_duplicates()
+        .sort_values(
+            FACILITY_KEY_COLUMNS
+        )
+        .reset_index(drop=True)
+    )
+
+    return result
 
 
 @st.cache_data(show_spinner=False)
@@ -1086,37 +1147,285 @@ def render_completeness_heatmap(completeness_df: pd.DataFrame, months: list[pd.T
 
 
 @st.cache_data(show_spinner=False)
-def load_mapping_sources() -> list[dict[str, str]]:
-    config_path = ROOT_DIR / "config" / "mapping_files.yaml"
-    if not config_path.exists():
-        config_path = ROOT_DIR / "config" / "mapping_files.example.yaml"
+def load_mapping_sources() -> list[
+    dict[str, str]
+]:
+    config_path = (
+        ROOT_DIR
+        / "config"
+        / "mapping_files.yaml"
+    )
 
-    config = load_yaml(config_path)
+    if not config_path.exists():
+        config_path = (
+            ROOT_DIR
+            / "config"
+            / "mapping_files.example.yaml"
+        )
+
+    config = load_yaml(
+        config_path
+    )
+
     sources = []
-    for source_key, item in (config.get("mapping_files") or {}).items():
-        workbook_path = Path(item.get("path", ""))
-        if not workbook_path.is_absolute():
-            workbook_path = ROOT_DIR / workbook_path
+
+    for (
+        source_key,
+        item,
+    ) in (
+        config.get(
+            "mapping_files"
+        )
+        or {}
+    ).items():
+        blob_name = str(
+            item.get(
+                "blob_name",
+                "",
+            )
+        ).strip()
+
+        sharepoint_url = str(
+            item.get(
+                "sharepoint_url",
+                "",
+            )
+        ).strip()
+
+        raw_path = str(
+            item.get(
+                "path",
+                "",
+            )
+        ).strip()
+
+        local_path = ""
+
+        if raw_path:
+            workbook_path = Path(
+                raw_path
+            )
+
+            if not workbook_path.is_absolute():
+                workbook_path = (
+                    ROOT_DIR
+                    / workbook_path
+                )
+
+            local_path = str(
+                workbook_path.resolve()
+            )
+
+        if blob_name:
+            file_name = Path(
+                blob_name
+            ).name
+
+            location = (
+                f"Azure Blob: "
+                f"{blob_name}"
+            )
+
+        elif local_path:
+            file_name = Path(
+                local_path
+            ).name
+
+            location = (
+                local_path
+            )
+
+        else:
+            file_name = str(
+                source_key
+            )
+
+            location = (
+                "No runtime source configured"
+            )
+
         sources.append(
             {
-                "key": str(source_key),
-                "name": friendly_field_name(source_key),
-                "file_name": workbook_path.name,
-                "source_type": str(item.get("sheet_name", "")) or "Workbook",
-                "path": str(workbook_path.resolve()),
+                "key": str(
+                    source_key
+                ),
+                "name": (
+                    friendly_field_name(
+                        source_key
+                    )
+                ),
+                "file_name": (
+                    file_name
+                ),
+                "source_type": (
+                    str(
+                        item.get(
+                            "sheet_name",
+                            "",
+                        )
+                    )
+                    or "Workbook"
+                ),
+                "blob_name": (
+                    blob_name
+                ),
+                "sharepoint_url": (
+                    sharepoint_url
+                ),
+                "path": (
+                    local_path
+                ),
+                "location": (
+                    location
+                ),
             }
         )
-    facility_dropdown_path = facility_dropdown_source_path()
+
+    dropdown_config = (
+        load_dropdown_config(
+            dropdown_config_path(
+                ROOT_DIR / "config",
+                "scope2",
+            )
+        )
+    )
+
+    entity_list_config = (
+        dropdown_config
+        .get(
+            "validation",
+            {},
+        )
+        .get(
+            "entity_list",
+            {},
+        )
+    )
+
+    if not isinstance(
+        entity_list_config,
+        dict,
+    ):
+        entity_list_config = {}
+
+    facility_blob_name = str(
+        entity_list_config.get(
+            "blob_name",
+            "",
+        )
+    ).strip()
+
+    facility_sharepoint_url = str(
+        entity_list_config.get(
+            "sharepoint_url",
+            "",
+        )
+    ).strip()
+
+    facility_raw_source = str(
+        entity_list_config.get(
+            "source",
+            "",
+        )
+    ).strip()
+
+    facility_local_path = ""
+
+    if facility_raw_source:
+        facility_path = (
+            entity_list_source_path(
+                ROOT_DIR / "config",
+                dropdown_config,
+            )
+        )
+
+        facility_local_path = str(
+            facility_path.resolve()
+        )
+
+    if facility_blob_name:
+        facility_file_name = Path(
+            facility_blob_name
+        ).name
+
+        facility_location = (
+            f"Azure Blob: "
+            f"{facility_blob_name}"
+        )
+
+    elif facility_local_path:
+        facility_file_name = Path(
+            facility_local_path
+        ).name
+
+        facility_location = (
+            facility_local_path
+        )
+
+    else:
+        facility_file_name = (
+            "master_entity_list.csv"
+        )
+
+        facility_location = (
+            "No runtime source configured"
+        )
+
     sources.append(
         {
             "key": "facility_dropdown",
             "name": "Facility Dropdown",
-            "file_name": facility_dropdown_path.name,
+            "file_name": (
+                facility_file_name
+            ),
             "source_type": "CSV",
-            "path": str(facility_dropdown_path.resolve()),
+            "blob_name": (
+                facility_blob_name
+            ),
+            "sharepoint_url": (
+                facility_sharepoint_url
+            ),
+            "path": (
+                facility_local_path
+            ),
+            "location": (
+                facility_location
+            ),
         }
     )
+
     return sources
+
+
+@st.cache_data(show_spinner=False)
+def load_mapping_source_blob(
+    blob_name: str,
+) -> bytes:
+    return download_blob_bytes(
+        blob_name
+    )
+
+
+def mapping_source_mime_type(
+    file_name: str,
+) -> str:
+    suffix = (
+        Path(file_name)
+        .suffix
+        .lower()
+    )
+
+    if suffix == ".xlsx":
+        return (
+            "application/"
+            "vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        )
+
+    if suffix == ".csv":
+        return "text/csv"
+
+    return "application/octet-stream"
 
 
 def open_mapping_file(path: str) -> tuple[bool, str]:
@@ -1139,6 +1448,7 @@ def clear_cached_data() -> None:
     _read_csv_cached.clear()
     _read_excel_cached.clear()
     load_mapping_sources.clear()
+    load_mapping_source_blob.clear()
 
 
 def run_pipeline(category_key: str) -> tuple[bool, str]:
@@ -2181,46 +2491,199 @@ def show_missing_mapping(category_key: str) -> None:
 
 
 def show_mapping_sources() -> None:
-    mapping_sources = load_mapping_sources()
+    mapping_sources = (
+        load_mapping_sources()
+    )
+
     if not mapping_sources:
-        st.info("No mapping workbook configuration was found.")
+        st.info(
+            "No mapping workbook "
+            "configuration was found."
+        )
         return
 
     if st.button(
         "Refresh mapping list",
-        key="refresh_mapping_sources_button",
+        key=(
+            "refresh_mapping_sources_button"
+        ),
         icon=":material/refresh:",
     ):
         load_mapping_sources.clear()
+        load_mapping_source_blob.clear()
         clear_cached_data()
         st.rerun()
 
-    st.caption("Open a mapping source, edit it in its desktop app, then save the file.")
-    for source in mapping_sources:
-        workbook_path = Path(source["path"])
-        row_cols = st.columns([1.5, 1.2, 0.75], vertical_alignment="center")
-        row_cols[0].markdown(f"**{source['name']}**")
-        row_cols[1].caption(source["source_type"])
+    st.caption(
+        "Reference files are edited in "
+        "SharePoint and synchronized to "
+        "Azure Blob Storage. The app reads "
+        "the Blob copy."
+    )
 
-        if workbook_path.exists():
-            if row_cols[2].button(
-                "Open",
-                key=f"open_mapping_source_{source['key']}",
-                icon=":material/open_in_new:",
+    header_cols = st.columns(
+        [1.5, 1.6, 1.0, 1.0],
+        vertical_alignment="center",
+    )
+
+    header_cols[0].markdown(
+        "**Source**"
+    )
+
+    header_cols[1].markdown(
+        "**Runtime location**"
+    )
+
+    header_cols[2].markdown(
+        "**Edit**"
+    )
+
+    header_cols[3].markdown(
+        "**Download**"
+    )
+
+    for source in mapping_sources:
+        row_cols = st.columns(
+            [1.5, 1.6, 1.0, 1.0],
+            vertical_alignment="center",
+        )
+
+        row_cols[0].markdown(
+            f"**{source['name']}**"
+        )
+
+        row_cols[0].caption(
+            source[
+                "file_name"
+            ]
+        )
+
+        row_cols[1].caption(
+            source.get(
+                "location",
+                "",
+            )
+        )
+
+        sharepoint_url = (
+            source.get(
+                "sharepoint_url",
+                "",
+            )
+            .strip()
+        )
+
+        if sharepoint_url:
+            row_cols[2].link_button(
+                "Edit in SharePoint",
+                sharepoint_url,
+                icon=(
+                    ":material/"
+                    "open_in_new:"
+                ),
                 use_container_width=True,
-            ):
-                opened, message = open_mapping_file(source["path"])
-                if opened:
-                    st.success(message)
-                else:
-                    st.error(message)
+            )
+
         else:
             row_cols[2].button(
-                "Missing",
-                key=f"missing_mapping_source_{source['key']}",
-                icon=":material/error:",
+                "No edit link",
+                key=(
+                    "no_edit_link_"
+                    f"{source['key']}"
+                ),
                 disabled=True,
                 use_container_width=True,
+            )
+
+        blob_name = (
+            source.get(
+                "blob_name",
+                "",
+            )
+            .strip()
+        )
+
+        local_path = (
+            source.get(
+                "path",
+                "",
+            )
+            .strip()
+        )
+
+        try:
+            download_data = None
+
+            if blob_name:
+                download_data = (
+                    load_mapping_source_blob(
+                        blob_name
+                    )
+                )
+
+            elif (
+                local_path
+                and Path(
+                    local_path
+                ).exists()
+            ):
+                download_data = (
+                    Path(
+                        local_path
+                    ).read_bytes()
+                )
+
+            if download_data is not None:
+                row_cols[3].download_button(
+                    "Download Current",
+                    data=download_data,
+                    file_name=source[
+                        "file_name"
+                    ],
+                    mime=(
+                        mapping_source_mime_type(
+                            source[
+                                "file_name"
+                            ]
+                        )
+                    ),
+                    key=(
+                        "download_mapping_source_"
+                        f"{source['key']}"
+                    ),
+                    icon=(
+                        ":material/"
+                        "download:"
+                    ),
+                    use_container_width=True,
+                )
+
+            else:
+                row_cols[3].button(
+                    "Unavailable",
+                    key=(
+                        "missing_download_"
+                        f"{source['key']}"
+                    ),
+                    disabled=True,
+                    use_container_width=True,
+                )
+
+        except Exception as exc:
+            row_cols[3].button(
+                "Unavailable",
+                key=(
+                    "failed_download_"
+                    f"{source['key']}"
+                ),
+                disabled=True,
+                use_container_width=True,
+            )
+
+            st.error(
+                f"Could not load "
+                f"{source['name']} "
+                f"from Blob: {exc}"
             )
 
 
